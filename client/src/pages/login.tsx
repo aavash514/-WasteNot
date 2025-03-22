@@ -95,11 +95,17 @@ export default function Login() {
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex flex-col">
+        <CardFooter className="flex flex-col space-y-2">
           <div className="text-sm text-center text-gray-500">
             Don't have an account yet?{" "}
             <Link href={ROUTES.REGISTER} className="text-primary font-medium hover:underline">
               Sign up
+            </Link>
+          </div>
+          <div className="text-sm text-center text-gray-500">
+            Learn more about the app?{" "}
+            <Link href={ROUTES.DOWNLOAD} className="text-primary font-medium hover:underline">
+              Download source code
             </Link>
           </div>
         </CardFooter>

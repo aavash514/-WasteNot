@@ -146,11 +146,17 @@ export default function Register() {
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex flex-col">
+        <CardFooter className="flex flex-col space-y-2">
           <div className="text-sm text-center text-gray-500">
             Already have an account?{" "}
             <Link href={ROUTES.LOGIN} className="text-primary font-medium hover:underline">
               Log in
+            </Link>
+          </div>
+          <div className="text-sm text-center text-gray-500">
+            Learn more about the app?{" "}
+            <Link href={ROUTES.DOWNLOAD} className="text-primary font-medium hover:underline">
+              Download source code
             </Link>
           </div>
         </CardFooter>
