@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLocation } from "wouter";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Bell, UserCircle, LockKeyhole, ShieldCheck, LogOut } from "lucide-react";
+import { Bell, UserCircle, LockKeyhole, ShieldCheck, LogOut, Upload, Camera, Check } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -11,12 +11,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/layout/Header";
 import SideNav from "@/components/layout/SideNav";
 import MobileNav from "@/components/layout/MobileNav";
-import { ROUTES } from "@/lib/constants";
+import { ROUTES, DEFAULT_AVATAR } from "@/lib/constants";
 import useAuth from "@/hooks/useAuth";
+import { apiRequest } from "@/lib/queryClient";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 // Form validation schemas
 const profileFormSchema = z.object({
@@ -38,10 +41,46 @@ export default function Settings() {
   const { user, logout } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
   
   // Notification settings
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [appNotifications, setAppNotifications] = useState(true);
+  
+  // Profile picture upload
+  const avatarMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("avatar", file);
+      
+      return apiRequest<{ avatarUrl: string }>({
+        url: `/api/users/${user?.id}/avatar`,
+        method: "POST",
+        body: formData,
+        headers: {
+          // Don't set Content-Type here, it will be set automatically with boundary for FormData
+        },
+      });
+    },
+    onSuccess: (data) => {
+      if (data) {
+        toast({
+          title: "Profile Picture Updated",
+          description: "Your profile picture has been updated successfully",
+        });
+        // Invalidate user cache to refresh the avatar
+        queryClient.invalidateQueries({ queryKey: [`/api/users/${user?.id}`] });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update profile picture. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
   
   // Redirect if not logged in
   useEffect(() => {
@@ -145,6 +184,43 @@ export default function Settings() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
+                    <div className="mb-6 flex flex-col items-center">
+                      <Avatar className="h-24 w-24 mb-4">
+                        <AvatarImage src={user.avatarUrl || DEFAULT_AVATAR} alt={user.name} />
+                        <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      
+                      <div className="flex gap-2">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={avatarMutation.isPending}
+                          className="flex items-center"
+                        >
+                          {avatarMutation.isPending ? (
+                            <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                          ) : (
+                            <Upload className="h-4 w-4 mr-2" />
+                          )}
+                          Change Photo
+                        </Button>
+                        
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              avatarMutation.mutate(file);
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                    
                     <Form {...profileForm}>
                       <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-6">
                         <FormField

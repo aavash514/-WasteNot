@@ -3,7 +3,10 @@ import fs from 'fs';
 
 // Initialize the Google Cloud Vision client
 const visionClient = new ImageAnnotatorClient({
-  keyFilename: process.env.GOOGLE_CLOUD_VISION_API_KEY
+  credentials: { 
+    private_key: process.env.GOOGLE_CLOUD_VISION_API_KEY || '',
+    client_email: 'wastenot-api@wastenot-project.iam.gserviceaccount.com'
+  }
 });
 
 /**

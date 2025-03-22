@@ -14,6 +14,7 @@ import multer from "multer";
 import fs from "fs";
 import path from "path";
 import { nanoid } from "nanoid";
+import { analyzeFoodWaste } from "./vision-api";
 
 // Setup file upload
 const upload = multer({
@@ -129,6 +130,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Upload profile picture
+  router.post("/users/:id/avatar", upload.single("avatar"), async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      if (!req.file) {
+        return res.status(400).json({ message: "No image uploaded" });
+      }
+      
+      const avatarUrl = `/uploads/${req.file.filename}`;
+      
+      const updatedUser = await storage.updateUserAvatar(userId, avatarUrl);
+      
+      // Remove password before sending the user back
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.status(200).json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error updating profile picture:", error);
+      res.status(500).json({ message: "Could not update profile picture" });
+    }
+  });
+  
   // Meal routes
   router.get("/users/:userId/meals", async (req: Request, res: Response) => {
     try {
@@ -194,7 +222,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const photoUrl = `/uploads/${req.file.filename}`;
-      const wastePercentage = parseInt(req.body.wastePercentage || "0");
+      const photoPath = path.join(process.cwd(), "uploads", req.file.filename);
+      
+      // Use Google Cloud Vision API to analyze the food waste
+      let wastePercentage = 0;
+      try {
+        wastePercentage = await analyzeFoodWaste(photoPath);
+        console.log(`Analyzed food waste: ${wastePercentage}%`);
+      } catch (visionError) {
+        console.error("Error analyzing food waste:", visionError);
+        // Fall back to user-provided value if available, or default to a low waste percentage
+        wastePercentage = parseInt(req.body.wastePercentage || "5");
+      }
       
       // Calculate points based on waste percentage
       let pointsEarned = 0;
@@ -246,6 +285,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(200).json(updatedMeal);
     } catch (error) {
+      console.error("Error processing after photo:", error);
       res.status(500).json({ message: "Could not upload after photo" });
     }
   });
