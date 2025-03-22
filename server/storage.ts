@@ -14,6 +14,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUserPoints(userId: number, points: number): Promise<User>;
   updateUserStreak(userId: number, streak: number): Promise<User>;
+  updateUserAvatar(userId: number, avatarUrl: string): Promise<User>;
   
   // Meal methods
   getMeal(id: number): Promise<Meal | undefined>;
@@ -147,6 +148,21 @@ export class MemStorage implements IStorage {
     const updatedUser: User = {
       ...user,
       streak
+    };
+    
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+  
+  async updateUserAvatar(userId: number, avatarUrl: string): Promise<User> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    
+    const updatedUser: User = {
+      ...user,
+      avatarUrl
     };
     
     this.users.set(userId, updatedUser);
