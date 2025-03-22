@@ -10,6 +10,7 @@ export const ROUTES = {
   ACHIEVEMENTS: "/achievements",
   SUSTAINABILITY: "/sustainability",
   SETTINGS: "/settings",
+  DOWNLOAD: "/download",
 };
 
 // Meal types

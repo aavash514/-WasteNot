@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import Login from "@/pages/login";
@@ -10,29 +10,48 @@ import Sustainability from "@/pages/sustainability";
 import Settings from "@/pages/settings";
 import DownloadPage from "@/pages/download";
 import NotFound from "@/pages/not-found";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider, AuthContext } from "@/hooks/useAuth";
+import { useContext } from "react";
 
-function Router() {
-  return (
-    <Switch>
-      <Route path="/" component={Login} />
-      <Route path="/register" component={Register} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/meals" component={MealTracking} />
-      <Route path="/achievements" component={Achievements} />
-      <Route path="/sustainability" component={Sustainability} />
-      <Route path="/settings" component={Settings} />
-      <Route path="/download" component={DownloadPage} />
-      <Route component={NotFound} />
-    </Switch>
-  );
+function ProtectedRoute({ component: Component, ...rest }: { component: React.ComponentType, path?: string }) {
+  const { user } = useContext(AuthContext);
+  const [, navigate] = useLocation();
+  
+  if (!user) {
+    navigate("/");
+    return null;
+  }
+  
+  return <Component {...rest} />;
 }
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router />
+        <Switch>
+          <Route path="/" component={Login} />
+          <Route path="/register" component={Register} />
+          <Route path="/download" component={DownloadPage} />
+          <Route path="/dashboard">
+            <ProtectedRoute component={Dashboard} />
+          </Route>
+          <Route path="/meals">
+            <ProtectedRoute component={MealTracking} />
+          </Route>
+          <Route path="/achievements">
+            <ProtectedRoute component={Achievements} />
+          </Route>
+          <Route path="/sustainability">
+            <ProtectedRoute component={Sustainability} />
+          </Route>
+          <Route path="/settings">
+            <ProtectedRoute component={Settings} />
+          </Route>
+          <Route>
+            <NotFound />
+          </Route>
+        </Switch>
       </AuthProvider>
     </QueryClientProvider>
   );

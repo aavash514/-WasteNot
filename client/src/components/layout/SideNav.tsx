@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { 
-  Home, Utensils, Medal, Leaf, Settings, Coins
+  Home, Utensils, Medal, Leaf, Settings, Coins, Download
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,12 @@ export default function SideNav() {
       icon: <Settings className="w-5 h-5" />, 
       href: ROUTES.SETTINGS,
       active: location === ROUTES.SETTINGS
+    },
+    { 
+      name: "Download", 
+      icon: <Download className="w-5 h-5" />, 
+      href: ROUTES.DOWNLOAD,
+      active: location === ROUTES.DOWNLOAD
     }
   ];
   

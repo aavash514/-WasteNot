@@ -4,7 +4,7 @@ import { User, AuthContextType, RegisterData } from "@/lib/types";
 import { ROUTES } from "@/lib/constants";
 import { apiRequest } from "@/lib/queryClient";
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
