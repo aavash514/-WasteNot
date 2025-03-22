@@ -224,10 +224,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const photoUrl = `/uploads/${req.file.filename}`;
       const photoPath = path.join(process.cwd(), "uploads", req.file.filename);
       
-      // Use Google Cloud Vision API to analyze the food waste
+      // Extract "before" photo path from the URL
+      const beforePhotoFilename = meal.beforePhotoUrl.split('/').pop();
+      const beforePhotoPath = beforePhotoFilename 
+        ? path.join(process.cwd(), "uploads", beforePhotoFilename)
+        : null;
+      
+      // Compare before and after photos for better waste analysis
       let wastePercentage = 0;
       try {
-        wastePercentage = await analyzeFoodWaste(photoPath);
+        // User can provide an estimate if they want to override the automatic analysis
+        if (req.body.wastePercentage !== undefined) {
+          wastePercentage = parseInt(req.body.wastePercentage);
+        } else if (beforePhotoPath && fs.existsSync(beforePhotoPath)) {
+          // If we have valid before and after photos, we can do a comparison
+          // For now, we'll use the Vision API on just the after photo, but in a real app
+          // you would analyze both photos and compare them
+          wastePercentage = await analyzeFoodWaste(photoPath);
+          
+          // Add logic to detect if both photos are identical or very similar
+          // This is a simplified approach - in a real app you'd use image comparison algorithms
+          const beforeStats = fs.statSync(beforePhotoPath);
+          const afterStats = fs.statSync(photoPath);
+          
+          // If file sizes are very close (within 5% of each other), they might be similar photos
+          // This is a very naive check but helps with the case where someone uploads the same photo twice
+          const sizeDifference = Math.abs(beforeStats.size - afterStats.size) / beforeStats.size;
+          if (sizeDifference < 0.05) {
+            console.log("Before and after photos appear very similar - possible duplicate upload");
+            wastePercentage = Math.min(wastePercentage, 5); // Assume minimal waste if photos look identical
+          }
+        } else {
+          // If we can't compare, use Vision API on the after photo
+          wastePercentage = await analyzeFoodWaste(photoPath);
+        }
+        
         console.log(`Analyzed food waste: ${wastePercentage}%`);
       } catch (visionError) {
         console.error("Error analyzing food waste:", visionError);
