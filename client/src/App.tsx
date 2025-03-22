@@ -8,6 +8,7 @@ import MealTracking from "@/pages/meal-tracking";
 import Achievements from "@/pages/achievements";
 import Sustainability from "@/pages/sustainability";
 import Settings from "@/pages/settings";
+import DownloadPage from "@/pages/download";
 import NotFound from "@/pages/not-found";
 import { AuthProvider } from "@/hooks/useAuth";
 
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/achievements" component={Achievements} />
       <Route path="/sustainability" component={Sustainability} />
       <Route path="/settings" component={Settings} />
+      <Route path="/download" component={DownloadPage} />
       <Route component={NotFound} />
     </Switch>
   );

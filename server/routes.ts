@@ -375,6 +375,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Add a download route for the source code zip file
+  router.get("/download/source-code", (req: Request, res: Response) => {
+    const zipPath = path.join(process.cwd(), "uploads", "wastenot_source_code.zip");
+    if (fs.existsSync(zipPath)) {
+      res.download(zipPath, "wastenot_source_code.zip");
+    } else {
+      res.status(404).json({ message: "Source code file not found" });
+    }
+  });
+  
   // Mount API routes
   app.use("/api", router);
   
