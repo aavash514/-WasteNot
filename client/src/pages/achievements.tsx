@@ -24,7 +24,7 @@ export default function Achievements() {
   
   // Fetch user's badges
   const { data: badges, isLoading } = useQuery<Badge[]>({
-    queryKey: user ? [`/api/users/${user.id}/badges`] : null,
+    queryKey: ["user-badges", user?.id],
     enabled: !!user,
   });
   

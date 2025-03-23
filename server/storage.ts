@@ -118,7 +118,8 @@ export class MemStorage implements IStorage {
       ...insertUser, 
       id,
       points: 0,
-      streak: 0
+      streak: 0,
+      avatarUrl: insertUser.avatarUrl || null
     };
     this.users.set(id, user);
     return user;
@@ -188,10 +189,22 @@ export class MemStorage implements IStorage {
   
   async createMeal(meal: InsertMeal): Promise<Meal> {
     const id = this.mealIdCounter++;
-    const newMeal: Meal = { ...meal, id, pointsEarned: 0 };
+  
+    const newMeal: Meal = {
+      ...meal,
+      id,
+      status: meal.status ?? "pending",
+      beforePhotoUrl: meal.beforePhotoUrl ?? null,
+      afterPhotoUrl: meal.afterPhotoUrl ?? null,
+      wastePercentage: meal.wastePercentage ?? null,
+      pointsEarned: 0
+
+    };
+  
     this.meals.set(id, newMeal);
     return newMeal;
   }
+  
   
   async updateMeal(id: number, update: UpdateMeal): Promise<Meal> {
     const meal = await this.getMeal(id);
@@ -214,7 +227,9 @@ export class MemStorage implements IStorage {
   
   async createBadge(badge: InsertBadge): Promise<Badge> {
     const id = this.badgeIdCounter++;
-    const newBadge: Badge = { ...badge, id };
+    const newBadge: Badge = { ...badge, id,
+      count: badge.count ?? 0
+     };
     this.badges.set(id, newBadge);
     return newBadge;
   }
@@ -269,7 +284,7 @@ export class MemStorage implements IStorage {
   
   async addParticipant(participant: InsertActivityParticipant): Promise<ActivityParticipant> {
     const id = this.participantIdCounter++;
-    const newParticipant: ActivityParticipant = { ...participant, id };
+    const newParticipant: ActivityParticipant = { ...participant, id, registered:participant.registered ?? false, attended:participant.attended ?? false};
     this.activityParticipants.set(id, newParticipant);
     
     // Update the activity's participant count
